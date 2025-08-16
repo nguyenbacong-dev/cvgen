@@ -304,28 +304,25 @@ textarea.form-control {
 
 /* Preview */
 .preview-container {
-    height: 100%;
-    min-height: 500px;
+    height: 100%;        /* <-- chiều cao bị giới hạn theo cha */
+    min-height: 500px;   /* <-- chỉ bắt đầu từ 500px, nhưng không mở rộng thêm */
+    overflow-y: auto;    /* <-- bắt buộc có thanh cuộn dọc */
+}
+
+.preview-container {
+    height: 100vh;              /* chiếm toàn bộ chiều cao màn hình */
     border: 2px solid var(--border-primary);
     border-radius: 6px;
-    overflow-y: auto;
+    overflow-y: auto;           /* chỉ cuộn nếu thật sự cần */
     background: var(--bg-primary);
 }
 
-.preview-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-.preview-placeholder i {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    opacity: 0.5;
+.preview-container {
+    height: auto;
+    min-height: 100vh;   /* ít nhất cao bằng màn hình */
+    border: 2px solid var(--border-primary);
+    border-radius: 6px;
+    background: var(--bg-primary);
 }
 
 /* Actions */
