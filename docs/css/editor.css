@@ -304,25 +304,25 @@ textarea.form-control {
 
 /* Preview */
 .preview-container {
-    height: 100%;        /* <-- chiều cao bị giới hạn theo cha */
-    min-height: 500px;   /* <-- chỉ bắt đầu từ 500px, nhưng không mở rộng thêm */
-    overflow-y: auto;    /* <-- bắt buộc có thanh cuộn dọc */
-}
-
-.preview-container {
-    height: 100vh;              /* chiếm toàn bộ chiều cao màn hình */
-    border: 2px solid var(--border-primary);
-    border-radius: 6px;
-    overflow-y: auto;           /* chỉ cuộn nếu thật sự cần */
-    background: var(--bg-primary);
-}
-
-.preview-container {
-    height: auto;
-    min-height: 100vh;   /* ít nhất cao bằng màn hình */
+    width: 210mm;                 /* chiều ngang A4 */
+    min-height: 297mm;            /* chiều cao A4 */
+    margin: 0 auto;               /* căn giữa */
     border: 2px solid var(--border-primary);
     border-radius: 6px;
     background: var(--bg-primary);
+    overflow: hidden;             /* bỏ cuộn trong khung */
+    box-shadow: 0 0 10px rgba(0,0,0,0.2); /* tạo cảm giác như tờ giấy */
+}
+
+.preview-page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;               /* lề giống giấy */
+    margin: 10px auto;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    page-break-after: always;    /* khi in sẽ xuống trang */
 }
 
 /* Actions */
