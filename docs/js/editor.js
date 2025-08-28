@@ -15,7 +15,6 @@ class CVEditor {
             const storageKey = `cvgen_${key}`;
             localStorage.setItem(storageKey, JSON.stringify(data));
             
-            // Show brief saving indicator for cvData
             if (key === 'cvData') {
                 this.showSavingIndicator();
             }
@@ -25,7 +24,6 @@ class CVEditor {
     }
 
     showSavingIndicator() {
-        // Create or update saving indicator
         let indicator = document.getElementById('savingIndicator');
         if (!indicator) {
             indicator = document.createElement('div');
@@ -35,7 +33,6 @@ class CVEditor {
             document.body.appendChild(indicator);
         }
         
-        // Show and hide the indicator
         indicator.classList.add('show');
         clearTimeout(this.savingTimeout);
         this.savingTimeout = setTimeout(() => {
@@ -57,7 +54,6 @@ class CVEditor {
     async init() {
         this.setupEventListeners();
         
-        // Try to restore saved role from localStorage
         const savedRole = this.loadFromStorage('currentRole');
         if (savedRole) {
             this.currentRole = savedRole;
@@ -67,7 +63,6 @@ class CVEditor {
         await this.loadRole(this.currentRole);
         this.generateForm();
         
-        // Try to restore saved CV data from localStorage
         const savedData = this.loadFromStorage('cvData');
         if (savedData) {
             this.cvData = { ...this.cvData, ...savedData };
@@ -79,48 +74,40 @@ class CVEditor {
     }
 
     setupEventListeners() {
-        // Role selector
         document.getElementById('roleSelect').addEventListener('change', (e) => {
             this.saveToStorage('currentRole', e.target.value);
             this.loadRole(e.target.value);
         });
 
-        // View toggle
         document.getElementById('toggleView').addEventListener('click', () => {
             this.toggleView();
         });
 
-        // View toggle from JSON panel
         document.getElementById('toggleViewFromJson').addEventListener('click', () => {
             this.toggleView();
         });
 
-        // JSON editor
         document.getElementById('jsonEditor').addEventListener('input', (e) => {
             this.updateFromJSON(e.target.value);
         });
 
-        // Format JSON
         document.getElementById('formatJson').addEventListener('click', () => {
             this.formatJSON();
         });
 
-        // Refresh preview
         document.getElementById('refreshPreview').addEventListener('click', () => {
             this.generatePreview();
         });
 
-        // Validate
         document.getElementById('validateBtn').addEventListener('click', () => {
             this.validateData();
         });
 
-        // Download
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            this.downloadJSON();
+        // Download PDF thay vì JSON
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            this.downloadPDF();
         });
 
-        // Load file
         document.getElementById('loadFileBtn').addEventListener('click', () => {
             document.getElementById('fileInput').click();
         });
@@ -134,18 +121,15 @@ class CVEditor {
         this.currentRole = role;
         
         try {
-            // Load cv-schema once and use for both schema and data
             const cvSchemaResponse = await fetch(`./cv-data/${role}/cv-schema.json`);
             if (!cvSchemaResponse.ok) {
                 throw new Error(`Failed to load data: ${cvSchemaResponse.status}`);
             }
             const cvData = await cvSchemaResponse.json();
             
-            // Set both schema and data from the same response
             this.schema = cvData;
             this.cvData = cvData;
             
-            // Load template (only once, cache it)
             if (!this.template) {
                 const templateResponse = await fetch('./cv-templates/template-1.html');
                 if (!templateResponse.ok) {
@@ -154,11 +138,8 @@ class CVEditor {
                 this.template = await templateResponse.text();
             }
             
-            // Skip validation for now - focus on core functionality
             this.validator = null;
-
             
-            // Update UI
             this.generateForm();
             this.updateFormFromData();
             this.updateJSON();
@@ -174,7 +155,6 @@ class CVEditor {
         const formEditor = document.getElementById('formEditor');
         formEditor.innerHTML = '';
 
-        // Generate form based on schema
         const sections = this.getFormSections();
         
         sections.forEach(section => {
@@ -193,85 +173,37 @@ class CVEditor {
             formEditor.appendChild(sectionDiv);
         });
 
-        // Add event listeners to form fields
         this.addFormEventListeners();
     }
 
     getFormSections() {
-        const sections = [];
-        
-        // Personal Information
-        sections.push({
-            title: 'Personal Information',
-            fields: [
-                { name: 'personal_info.name', label: 'Full Name', type: 'text', required: true },
-                { name: 'personal_info.position', label: 'Position', type: 'text', required: true },
-                { name: 'personal_info.email', label: 'Email', type: 'email', required: true },
-                { name: 'personal_info.phone', label: 'Phone', type: 'text' },
-                { name: 'personal_info.location', label: 'Location', type: 'text' },
-                { name: 'personal_info.linkedin', label: 'LinkedIn', type: 'url' },
-                { name: 'personal_info.github', label: 'GitHub', type: 'url' },
-                { name: 'personal_info.portfolio', label: 'Portfolio', type: 'url' }
-            ]
-        });
-
-        // Summary
-        sections.push({
-            title: 'Professional Summary',
-            fields: [
-                { name: 'summary.professional_summary', label: 'Summary', type: 'textarea', help: '2-3 sentences about your background and career goals' }
-            ]
-        });
-
-        // Experience
-        sections.push({
-            title: 'Work Experience',
-            fields: [
-                { name: 'experience', label: 'Experience (JSON array)', type: 'textarea', help: 'Enter as JSON array of experience objects' }
-            ]
-        });
-
-        // Education
-        sections.push({
-            title: 'Education',
-            fields: [
-                { name: 'education', label: 'Education (JSON array)', type: 'textarea', help: 'Enter as JSON array of education objects' }
-            ]
-        });
-
-        // Skills
-        sections.push({
-            title: 'Skills',
-            fields: [
-                { name: 'skills', label: 'Skills (JSON object)', type: 'textarea', help: 'Enter as JSON object with skill categories' }
-            ]
-        });
-
-        // Projects
-        sections.push({
-            title: 'Projects',
-            fields: [
-                { name: 'projects', label: 'Projects (JSON array)', type: 'textarea', help: 'Enter as JSON array of project objects' }
-            ]
-        });
-
-        // Certifications
-        sections.push({
-            title: 'Certifications',
-            fields: [
-                { name: 'certifications', label: 'Certifications (JSON array)', type: 'textarea', help: 'Enter as JSON array of certification objects' }
-            ]
-        });
-
-        // Languages
-        sections.push({
-            title: 'Languages',
-            fields: [
-                { name: 'languages', label: 'Languages (JSON array)', type: 'textarea', help: 'Enter as JSON array of language objects' }
-            ]
-        });
-
-        return sections;
+        return [
+            {
+                title: 'Personal Information',
+                fields: [
+                    { name: 'personal_info.name', label: 'Full Name', type: 'text', required: true },
+                    { name: 'personal_info.position', label: 'Position', type: 'text', required: true },
+                    { name: 'personal_info.email', label: 'Email', type: 'email', required: true },
+                    { name: 'personal_info.phone', label: 'Phone', type: 'text' },
+                    { name: 'personal_info.location', label: 'Location', type: 'text' },
+                    { name: 'personal_info.linkedin', label: 'LinkedIn', type: 'url' },
+                    { name: 'personal_info.github', label: 'GitHub', type: 'url' },
+                    { name: 'personal_info.portfolio', label: 'Portfolio', type: 'url' }
+                ]
+            },
+            {
+                title: 'Professional Summary',
+                fields: [
+                    { name: 'summary.professional_summary', label: 'Summary', type: 'textarea', help: '2-3 sentences about your background and career goals' }
+                ]
+            },
+            { title: 'Work Experience', fields: [{ name: 'experience', label: 'Experience (JSON array)', type: 'textarea' }] },
+            { title: 'Education', fields: [{ name: 'education', label: 'Education (JSON array)', type: 'textarea' }] },
+            { title: 'Skills', fields: [{ name: 'skills', label: 'Skills (JSON object)', type: 'textarea' }] },
+            { title: 'Projects', fields: [{ name: 'projects', label: 'Projects (JSON array)', type: 'textarea' }] },
+            { title: 'Certifications', fields: [{ name: 'certifications', label: 'Certifications (JSON array)', type: 'textarea' }] },
+            { title: 'Languages', fields: [{ name: 'languages', label: 'Languages (JSON array)', type: 'textarea' }] }
+        ];
     }
 
     createFormField(field) {
@@ -298,14 +230,9 @@ class CVEditor {
         input.name = field.name;
         input.dataset.field = field.name;
         
-        // Set value from current data (handle nested fields)
         const fieldValue = this.getNestedValue(this.cvData, field.name);
         if (fieldValue !== undefined) {
-            if (typeof fieldValue === 'object') {
-                input.value = JSON.stringify(fieldValue, null, 2);
-            } else {
-                input.value = fieldValue;
-            }
+            input.value = typeof fieldValue === 'object' ? JSON.stringify(fieldValue, null, 2) : fieldValue;
         }
         
         fieldDiv.appendChild(input);
@@ -321,27 +248,20 @@ class CVEditor {
     }
 
     addFormEventListeners() {
-        const formFields = document.querySelectorAll('.form-control');
-        formFields.forEach(field => {
-            field.addEventListener('input', (e) => {
-                this.updateDataFromForm(e.target);
-            });
+        document.querySelectorAll('.form-control').forEach(field => {
+            field.addEventListener('input', (e) => this.updateDataFromForm(e.target));
         });
     }
 
     getNestedValue(obj, path) {
-        return path.split('.').reduce((current, key) => {
-            return current && current[key] !== undefined ? current[key] : undefined;
-        }, obj);
+        return path.split('.').reduce((current, key) => (current && current[key] !== undefined ? current[key] : undefined), obj);
     }
 
     setNestedValue(obj, path, value) {
         const keys = path.split('.');
         const lastKey = keys.pop();
         const target = keys.reduce((current, key) => {
-            if (!current[key]) {
-                current[key] = {};
-            }
+            if (!current[key]) current[key] = {};
             return current[key];
         }, obj);
         target[lastKey] = value;
@@ -351,18 +271,13 @@ class CVEditor {
         const fieldName = field.dataset.field;
         let value = field.value;
         
-        // Try to parse JSON for complex fields
         if (field.tagName === 'TEXTAREA' && !fieldName.includes('.')) {
             try {
                 value = JSON.parse(field.value);
-            } catch (e) {
-                // Keep as string if parsing fails
-            }
+            } catch (e) {}
         }
         
         this.setNestedValue(this.cvData, fieldName, value);
-        
-        // Save to localStorage whenever data changes
         this.saveToStorage('cvData', this.cvData);
         
         this.updateJSON();
@@ -370,37 +285,26 @@ class CVEditor {
     }
 
     updateJSON() {
-        const jsonEditor = document.getElementById('jsonEditor');
-        jsonEditor.value = JSON.stringify(this.cvData, null, 2);
+        document.getElementById('jsonEditor').value = JSON.stringify(this.cvData, null, 2);
     }
 
     updateFromJSON(jsonText) {
         try {
-            const newData = JSON.parse(jsonText);
-            this.cvData = newData;
-            
-            // Save to localStorage whenever JSON is updated
+            this.cvData = JSON.parse(jsonText);
             this.saveToStorage('cvData', this.cvData);
-            
             this.updateFormFromData();
             this.generatePreview();
-        } catch (e) {
-            // Invalid JSON, don't update
+        } catch {
             this.showValidationMessage('❌ Invalid JSON format', 'error');
         }
     }
 
     updateFormFromData() {
-        const formFields = document.querySelectorAll('.form-control');
-        formFields.forEach(field => {
+        document.querySelectorAll('.form-control').forEach(field => {
             const fieldName = field.dataset.field;
             const fieldValue = this.getNestedValue(this.cvData, fieldName);
             if (fieldValue !== undefined) {
-                if (typeof fieldValue === 'object') {
-                    field.value = JSON.stringify(fieldValue, null, 2);
-                } else {
-                    field.value = fieldValue;
-                }
+                field.value = typeof fieldValue === 'object' ? JSON.stringify(fieldValue, null, 2) : fieldValue;
             }
         });
     }
@@ -411,12 +315,10 @@ class CVEditor {
         const toggleBtn = document.getElementById('toggleView');
         
         if (jsonPanel.style.display === 'none' || jsonPanel.style.display === '') {
-            // Switch to JSON View
             formPanel.style.display = 'none';
             jsonPanel.style.display = 'flex';
             toggleBtn.innerHTML = '<i class="fas fa-edit"></i> Form View';
         } else {
-            // Switch to Form View
             formPanel.style.display = 'flex';
             jsonPanel.style.display = 'none';
             toggleBtn.innerHTML = '<i class="fas fa-code"></i> JSON View';
@@ -426,9 +328,8 @@ class CVEditor {
     formatJSON() {
         const jsonEditor = document.getElementById('jsonEditor');
         try {
-            const parsed = JSON.parse(jsonEditor.value);
-            jsonEditor.value = JSON.stringify(parsed, null, 2);
-        } catch (e) {
+            jsonEditor.value = JSON.stringify(JSON.parse(jsonEditor.value), null, 2);
+        } catch {
             this.showValidationMessage('Invalid JSON format', 'error');
         }
     }
@@ -437,21 +338,15 @@ class CVEditor {
         const previewContainer = document.getElementById('previewContainer');
         
         try {
-            // Register Handlebars helpers only once
             if (!Handlebars.helpers.join) {
-                Handlebars.registerHelper('join', function(array, options) {
-                    if (!array || !Array.isArray(array)) return '';
-                    return array.join(', ');
+                Handlebars.registerHelper('join', function(array) {
+                    return Array.isArray(array) ? array.join(', ') : '';
                 });
             }
             
-            // Compile template
             const template = Handlebars.compile(this.template);
-            
-            // Generate HTML
             const html = template(this.cvData);
             
-            // Update preview with isolated iframe to prevent style conflicts
             previewContainer.innerHTML = `
                 <iframe 
                     id="previewFrame" 
@@ -472,26 +367,14 @@ class CVEditor {
     }
 
     validateData() {
-        const messages = document.getElementById('validationMessages');
-        messages.innerHTML = '';
-        
-        // Simple validation without Ajv
         const errors = [];
-        
-        if (!this.cvData.personal_info || !this.cvData.personal_info.name) {
-            errors.push('Name is required');
-        }
-        
-        if (!this.cvData.personal_info || !this.cvData.personal_info.email) {
-            errors.push('Email is required');
-        }
-        
+        if (!this.cvData.personal_info?.name) errors.push('Name is required');
+        if (!this.cvData.personal_info?.email) errors.push('Email is required');
+
         if (errors.length === 0) {
             this.showValidationMessage('✅ CV data looks good!', 'success');
         } else {
-            errors.forEach(error => {
-                this.showValidationMessage(`❌ ${error}`, 'error');
-            });
+            errors.forEach(err => this.showValidationMessage(`❌ ${err}`, 'error'));
         }
     }
 
@@ -502,18 +385,26 @@ class CVEditor {
         messageDiv.textContent = message;
         messages.appendChild(messageDiv);
         
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 5000);
+        setTimeout(() => messageDiv.remove(), 5000);
     }
 
-    downloadJSON() {
-        const jsonData = JSON.stringify(this.cvData, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const filename = `cv-${this.currentRole}-${new Date().toISOString().split('T')[0]}.json`;
-        
-        saveAs(blob, filename);
+    // ✅ Xuất PDF giống hệt preview (dùng html2canvas + jsPDF)
+    async downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const previewFrame = document.getElementById('previewFrame');
+        if (!previewFrame) return;
+
+        const doc = new jsPDF("p", "pt", "a4");
+        const content = previewFrame.contentDocument.body;
+        const canvas = await html2canvas(content, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        doc.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        const filename = `cv-${this.currentRole}-${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
     }
 
     async loadFile(file) {
@@ -521,17 +412,11 @@ class CVEditor {
         
         try {
             const text = await file.text();
-            const data = JSON.parse(text);
-            
-            this.cvData = data;
-            
-            // Save loaded data to localStorage
+            this.cvData = JSON.parse(text);
             this.saveToStorage('cvData', this.cvData);
-            
             this.updateFormFromData();
             this.updateJSON();
             this.generatePreview();
-            
             this.showValidationMessage('✅ File loaded successfully!', 'success');
         } catch (error) {
             this.showValidationMessage('❌ Error loading file: ' + error.message, 'error');
@@ -539,7 +424,7 @@ class CVEditor {
     }
 }
 
-// Initialize the editor when the page loads
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     new CVEditor();
-}); 
+});
